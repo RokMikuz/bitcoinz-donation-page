@@ -14,11 +14,12 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: FTP Deploy
+   - name: FTP Deploy
       uses: SamKirkland/FTP-Deploy-Action@4.1.0
       with:
-        ftp-server: "ftp.pasjihotel-kosmatincek.si"
-        ftp-username: ${{ secrets.FTP_test1 }}
-        ftp-password: ${{ secrets.FTP_test123btcz }}
-        local-dir: "./" # Set your local directory
-        git-ftp-args: --insecure # Remove if your FTP server supports FTPS
+        server: "ftp.pasjihotel-kosmatincek.si"
+        username: ${{ secrets.test1 }}
+        password: ${{ secrets.test123btcz }}
+        local-dir: "./test1" # Set your local directory
+        # Add 'server-dir' if needed to specify the directory on the server
+        # Remove 'git-ftp-args' or replace with appropriate inputs like 'exclude' or 'dry-run' if needed
