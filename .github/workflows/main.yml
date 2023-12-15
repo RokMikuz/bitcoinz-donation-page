@@ -1,0 +1,26 @@
+name: Deploy Website via FTP
+
+on:
+  push:
+    branches:
+      - master # Set to your default branch
+
+jobs:
+  ftp-deploy:
+    runs-on: ubuntu-latest
+    name: Deploy via FTP
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: FTP Deploy
+      uses: SamKirkland/FTP-Deploy-Action@4.1.0
+      with:
+        ftp-server: "ftp.pasjihotel-kosmatincek.si"
+        ftp-username: ${{ secrets.test1 }}
+        ftp-password: ${{ secrets.test123btcz }}
+        local-dir: "./" # Set your local directory
+        git-ftp-args: --insecure # Remove if your FTP server supports FTPS
+
+# Don't forget to set your FTP credentials in the repository secrets (FTP_USERNAME and FTP_PASSWORD)
