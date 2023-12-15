@@ -9,6 +9,8 @@ const ETH_ADDRESS = '0x4E3154bc8691BC480D0F317E866C064cC2c9455D';
 const BTC_ADDRESS = '1BzBfikDBGyWXGnPPk58nVVBppzfcGGXMx';
 const ZEC_ADDRESS = 't1ef9cxzpToGJcaSMXbTGRUDyrp76GfDLJG';
 const LTC_ADDRESS = 'LR8bPo7NjPNRVy6nPLVgr9zHee2C7RepKA';
+const USDTE_ADDRESS = '0xD36591b20f738f6929272a4391B8C133CB2e5C96';
+
 
 const CACHE_TEMPLATE = __DIR__ . '/cache/%s.cache';
 
@@ -31,7 +33,7 @@ function setCache($key, $value) {
 
 
 function getCoinPrice($coin) {
-    
+
     #if ($cache = getCache($coin.'-price')) {
     #    return $cache;
     #}
@@ -40,7 +42,7 @@ function getCoinPrice($coin) {
     if ($data === false) {
         return null;
     }
-    
+
 
     $data = json_decode($data);
     #setCache($coin.'-price', $data->bitcoinz->usd);
@@ -56,38 +58,45 @@ function getBtczBalance()
 
     $total = 0;
     foreach (BTCZ_ADDRESSES as $address) {
-        $addressTotal = file_get_contents('http://btczexplorer.blockhub.info/ext/getbalance/' . $address);
-        
+        $addressTotal = file_get_contents('https://explorer.btcz.rocks/api/addr/' . $address . '/balance');
+
 
         $total += $addressTotal;
     }
 
+    $total = $total / 1000000000000000000;
     setCache('btcz-balance', $total);
 
     return $total;
 }
 
-function getEthBalance()
-{
-    return 0;
+function getEthBalance() {
+    const API_KEY = 'NIEKSBV3HT23UCI2ATHA5M57VVS5UWY9TF';
+
     if ($cache = getCache('eth-balance')) {
         return $cache;
     }
 
-    $data = file_get_contents('https://etherchain.org/api/account/' . ETH_ADDRESS);
+    $url = 'https://api.etherscan.io/api?module=account&action=balance&address='. ETH_ADDRESS .'&tag=latest&apikey=' . API_KEY;
+    $data = file_get_contents($url);
+
     if ($data === false) {
         return null;
     }
 
-    $data = json_decode($data);
-    if ($data->status !== 1) {
+    $data = json_decode($data, true);
+    if ($data['status'] !== "1") {
         return null;
     }
 
-    setCache('eth-balance', $data->data[0]->balance / 1000000000000000000);
+    $balanceInWei = $data['result'];
+    $balanceInEth = bcdiv($balanceInWei, '1000000000000000000', 18); 
 
-    return $data->data[0]->balance / 1000000000000000000;
+    setCache('eth-balance', $balanceInEth);
+
+    return $balanceInEth;
 }
+
 
 function getBtcBalance()
 {
@@ -99,7 +108,7 @@ function getBtcBalance()
     if ($data === false) {
         return null;
     }
-    
+
     $data = $data/100000000;
 
     setCache('btc-balance', $data);
@@ -140,18 +149,36 @@ function getLtcBalance()
 
     return $data;
 }
+function getUSDTEBalance()
+{
+    if ($cache = getCache('USDTE-balance')) {
+        return $cache;
+    }
+    
+    $address = USDTE_ADDRESS;
+    $data = json_decode(file_get_contents("https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=0xdac17f958d2ee523a2206206994597c13d831ec7&address={$address}"));
 
+    if ((!isset($data->status) && $data->status !== 1) || $data === false) {
+        return null;
+    }
+
+    setCache('USDTE-balance', $data->result * 0.000001);
+
+    return $data->result * 0.000001;
+}
 $response = [
     'btczBalance' => getBtczBalance(),
     'ethBalance' => getEthBalance(),
     'btcBalance' => getBtcBalance(),
     'zecBalance' => getZecBalance(),
     'ltcBalance' => getLtcBalance(),
+    'USDTEBalance' => getUSDTEBalance(),
     'btczUsd' => getCoinPrice('bitcoinz'),
     'ethUsd' => getCoinPrice('ethereum'),
     'btcUsd' => getCoinPrice('bitcoin'),
     'zecUsd' => getCoinPrice('zcash'),
-    'ltcUsd' => getCoinPrice('litecoin')
+    'ltcUsd' => getCoinPrice('litecoin'),
+    'USDTEUsd' => getCoinPrice('tether')
 ];
 
 echo json_encode($response);
