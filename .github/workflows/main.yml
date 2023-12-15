@@ -9,12 +9,10 @@ jobs:
   ftp-deploy:
     runs-on: ubuntu-latest
     name: Deploy via FTP
-
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-
-   - name: FTP Deploy
+    - name: FTP Deploy
       uses: SamKirkland/FTP-Deploy-Action@4.1.0
       with:
         server: "ftp.pasjihotel-kosmatincek.si"
